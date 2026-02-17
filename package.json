@@ -1,0 +1,24 @@
+{
+  "name": "apploader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron . --no-crashpad --no-sandbox",
+    "pack": "electron-packager . Drawer --win --out=dist --no-asar --overwrite --electron-version=11.5.0 --icon=build/icons/icon.ico",
+    "electron:generate-icons": "electron-icon-builder --input=./logo.png --output=build --flatten"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "electron": "^40.4.1",
+    "electron-icon-builder": "^2.0.1",
+    "windows-shortcuts": "^0.1.6"
+  },
+  "devDependencies": {
+    "electron-packager": "^17.1.2"
+  }
+}

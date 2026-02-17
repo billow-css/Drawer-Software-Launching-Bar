@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>App Loader</title>
+    <script src="https://unpkg.com/vue@3.4.21"></script>
+
+    <style>
+        body{
+            background: #1a1a1ab6;
+            color: white;
+            overflow-y: auto;
+        }
+
+        body::-webkit-scrollbar {
+            width: 0 !important;
+            background: transparent !important;
+            display: none !important;
+        }
+
+        .category-title {
+            width: 800px;
+            font-size: 20px;
+            margin: 20px auto 10px;
+            text-shadow: 0 0 5px rgba(100, 180, 255, 0.5);
+            text-align: center;
+            user-select: none;
+            border-radius: 8px;
+            padding: 8px 0;
+        }
+
+        .category-title:hover {
+        background-color: #2d3748a4;
+        transition: background-color 0.2s;
+        }
+
+        /* 启动器标题样式 */
+        .launcher-title {
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-align: center;
+        text-shadow: 0 0 10px rgba(100, 180, 255, 0.5);
+        }
+
+        /* 软件按钮网格容器（以后放多个按钮自动排版） */
+        .app-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        justify-content: center;
+        gap: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 20px;
+        }
+
+        /* 单个软件按钮样式 */
+        .app-btn {
+        position: relative; /* 让 pin-badge 绝对定位 */
+        width: 100px;
+        height: 120px;
+        background: #252525;
+        border-radius: 12px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s;
+        user-select: none;
+        }
+
+        .status-btn {
+        position: relative; /* 让 pin-badge 绝对定位 */
+        width: 100px;
+        height: 60px;
+        background: #252525;
+        border-radius: 12px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s;
+        user-select: none;
+        }
+
+        .small-btn {
+        position: relative; /* 让 pin-badge 绝对定位 */
+        width: 80px;
+        height: 30px;
+        background: #252525;
+        border-radius: 12px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s;
+        user-select: none;
+        }
+
+        .pin-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 12px;
+        }
+
+        /* 鼠标悬浮效果 */
+        .app-btn:hover {
+        transform: scale(1.05);
+        background: #2d3748;
+        box-shadow: 0 0 15px rgba(100, 180, 255, 0.3);
+        }
+
+        .status-btn:hover {
+        transform: scale(1.05);
+        background: #2d3748;
+        box-shadow: 0 0 15px rgba(100, 180, 255, 0.3);
+        }
+
+        .small-btn:hover {
+        transform: scale(1.05);
+        background: #2d3748;
+        box-shadow: 0 0 15px rgba(100, 180, 255, 0.3);
+        }
+
+        /* 图标样式（适配图片） */
+        .app-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        object-fit: cover;
+        }
+
+        /* 软件名称样式 */
+        .app-name {
+        font-size: 13px;
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 90px;
+        }
+        
+        .search-container {
+        max-width: 600px;
+        margin: 0 auto 30px;
+        padding: 0 20px;
+        }
+
+        .search-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: #252525;
+        border: 1px solid #333;
+        border-radius: 8px;
+        color: white;
+        font-size: 16px;
+        outline: none;
+        transition: border-color 0.2s;
+        }
+
+        .status-icon{
+            font-size: 30px;
+        }
+
+        .status-grid{
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .search-input:focus {
+        border-color: #8ab4f8;
+        box-shadow: 0 0 0 2px rgba(138, 180, 248, 0.2);
+        }
+
+        /* 帮助信息弹窗样式 */
+        .help-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .help-content {
+            width: 90%;
+            max-width: 500px;
+            background: #252525;
+            border-radius: 12px;
+            padding: 20px 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .help-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 18px;
+            cursor: pointer;
+            user-select: none;
+            color: #ccc;
+        }
+
+        .help-close:hover {
+            color: white;
+        }
+
+        .help-content h3 {
+            margin: 0 0 15px 0;
+            color: #8ab4f8;
+            text-align: center;
+        }
+
+        .help-content ul {
+            margin: 0;
+            padding-left: 20px;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .help-content li {
+            margin-bottom: 8px;
+        }
+
+        .help-content kbd {
+            padding: 2px 6px;
+            background: #333;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 0 2px;
+        }
+
+        /* 加载提示 */
+        .loading {
+            text-align: center;
+            font-size: 16px;
+            color: #8ab4f8;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div style="text-align:center; margin-top:0px;">
+            <h1 class="launcher-title">Drawer | 程序坞</h1>
+            <p>Software Launching Bar</p>
+        </div>
+        <p style="text-align:center; margin-bottom:10px; color:#ffffffb7; font-size: 14px; font-style: italic;">点击图标打开软件，按 ESC 键关闭程序</p>
+
+        <!-- 搜索框 -->
+        <div class="search-container">
+            <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="搜索软件..." 
+            class="search-input"
+            >
+        </div>
+
+        <div class = "status-grid">
+            <div class ="status-btn" @click="closeWindow()">
+                <div class="status-icon">↩️</div>
+                <div class="app-name">返回</div>
+            </div>
+            <div class ="status-btn" @click="showHelp = !showHelp">
+                <div class="status-icon" >ℹ️</div>
+                <div class="app-name">帮助信息</div>
+            </div>
+            <div class ="status-btn" @click="openAppFolder()">
+                <div class="status-icon" >📁</div>
+                <div class="app-name">管理应用</div>
+            </div>
+        </div>
+
+        <!-- 加载提示 -->
+        <div class="loading" v-if="isLoading">正在加载应用列表...</div>
+
+        <!-- 外层循环：遍历所有分类 -->
+        <div v-for="category in filteredCategories" :key="category.CategoryName" v-if="!isLoading">
+
+        <!-- 点击这里，切换展开/收起 -->
+        <div 
+            class="category-title" 
+            @click="category.expanded = !category.expanded"
+        >
+            {{ category.CategoryName }}
+            <!-- 可选：加个小箭头显示状态 -->
+            <span style="margin-left:8px">{{ category.expanded ? '🔽' : '◀️' }}</span>
+        </div>
+
+        <!-- 关键：只有 expanded = true 才显示 app-grid -->
+        <div class="app-grid" v-if="category.expanded">
+            <div 
+        class="app-btn" 
+        v-for="app in category.apps" 
+        :key="app.shortcutKey"
+        @click="openApp(app.shortcutKey)"
+        >
+        <img class="app-icon" :src="app.icon" :alt="app.name">
+        <div class="app-name">{{ app.name }}</div>
+        </div>
+        </div>
+
+        </div>
+<!-- 帮助信息弹窗（重写版） -->
+<div class="help-modal" v-if="showHelp">
+    <div class="help-content" v-if="!showabout">
+        <div class="help-close" @click="showHelp = false">✕</div>
+        <h3>📌 Drawer Instructions</h3>
+        
+        <div class="help-section">
+            <h4>🔍 基础操作</h4>
+            <ul>
+                <li><strong>搜索软件</strong> – 顶部搜索框实时过滤，快速定位应用</li>
+                <li><strong>折叠分类</strong> – 点击分类标题（如“编程工具”）可展开/收起该组应用</li>
+                <li><strong>启动应用</strong> – 单击图标即可启动，启动后自动关闭程序坞</li>
+                <li><strong>退出程序</strong> – 点击「返回」按钮或按 <kbd>ESC</kbd> 键</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h4>📁 管理应用</h4>
+            <ul>
+                <li><strong>打开 App 文件夹</strong> – 点击底部「管理应用」按钮（📁），会打开文件夹并自动退出程序。你可以在其中新建文件夹（作为分类）后放入 <code>.lnk</code> 快捷方式，或者在已有的文件夹中放入<code>.lnk</code> 快捷方式，重启程序后自动生效。</li>
+                <li><strong>图标自动提取</strong> – 每次启动程序都会自动从快捷方式的目标文件中提取最新图标，无需手动干预。</li>
+                <li><strong style="color: red;">注意</strong> – 文件夹仅作为一次分类，不可堆叠，否则可能导致图标提取失败或程序坞无法识别应用；正确的做法是：每个分类文件夹下只包含一个层级的快捷方式。</li>
+            </ul>
+        </div>
+
+        <div class="help-section">
+            <h4>💡 小贴士</h4>
+            <ul>
+                <li>所有按钮悬浮时有缩放效果，界面滚动条已隐藏（仍可用滚轮滚动）。</li>
+                <li>如果你修改了 App 文件夹内的内容（增删分类或快捷方式），只需重启程序即可同步更新。</li>
+            </ul>
+        </div>
+
+        <p class="help-footer">✨ 如有问题，可再次打开本帮助。</p>
+        <div class = "small-btn" @click="showabout = !showabout">关于</div>
+    </div>
+    <div class="help-content" v-else>
+        <div class="help-close" @click="showHelp = false ; showabout = false">✕</div>
+        <h3>关于 Drawer</h3>
+        <p>版本：1.3.0</p>
+        <p>作者：As_Val</p>
+        <p>推荐配置：Windows 11</p>
+        <p>这是一个基于 Electron 和 Vue.js 的简易程序启动器，旨在提供一个快速访问常用应用的界面。所有图标和应用信息均来自用户指定的快捷方式文件夹，支持自定义分类和搜索功能。</p>
+        <p>如果你喜欢这个项目，欢迎在 GitHub 上给我点个赞 ⭐️！</p>
+        <p><strong>请注意：</strong>本程序有一定的人工智能协助</p>
+        <div class = "small-btn" @click="showabout = !showabout">返回帮助</div>
+    </div>
+</div>
+    </div>
+
+    <script>
+    // 提前引入 electron，避免动态注入导致的警告
+        const { ipcRenderer } = require('electron');
+
+        Vue.createApp({
+        data() {
+            return {
+            showabout:false,
+            searchQuery: '',
+            showHelp: false,
+            appCategories: [],
+            isLoading: true
+            }
+        },
+
+        async mounted() {
+            try {
+            // 读取 JSON 配置（加缓存清理）
+            const config = await fetch('./app-config.json?' + Date.now())
+                .then(res => {
+                if (!res.ok) throw new Error('配置文件读取失败');
+                return res.json();
+                });
+            this.appCategories = config;
+            } catch (err) {
+            alert('加载应用列表失败：' + err.message);
+            console.error('加载配置失败：', err);
+            } finally {
+            this.isLoading = false;
+            }
+        },
+
+        methods: {
+            // 直接用 ipcRenderer，避免 window.electron 导致的克隆错误
+            openApp(shortcutKey) {
+            ipcRenderer.invoke('open-app', shortcutKey)
+                .then((result) => {
+                if (!result) alert('打开失败！检查快捷方式是否存在');
+                this.closeWindow();
+                })
+                .catch((err) => {
+                alert('出错了：' + err.message);
+                });
+            },
+
+            closeWindow() {
+            try {
+                window.close();
+            } catch (err) {
+                alert('关闭窗口出错：' + err.message);
+            }
+            },
+
+            openAppFolder() {
+                ipcRenderer.invoke('open-app-folder').then(result => {
+                    if (!result) alert('打开文件夹失败！');
+                }).catch(err => {
+                    alert('出错了：' + err.message);
+                });
+                this.closeWindow();
+            },
+        },
+
+        created() {
+            document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeWindow();
+            }
+            });
+
+            // 捕获渲染进程未处理的异常
+            window.addEventListener('error', (err) => {
+            console.error('页面异常：', err.message);
+            });
+        },
+
+        computed: {
+            filteredCategories() {
+            const q = this.searchQuery.trim().toLowerCase();
+            if (!q) return this.appCategories;
+
+            return this.appCategories.map(cat => {
+                const filteredApps = cat.apps.filter(app => 
+                app.name.toLowerCase().includes(q)
+                );
+                return { ...cat, apps: filteredApps };
+            }).filter(cat => cat.apps.length);
+            }
+        },
+        }).mount('#app');
+    </script>
+</body>
+</html>
