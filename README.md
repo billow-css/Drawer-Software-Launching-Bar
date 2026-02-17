@@ -7,6 +7,7 @@ A desktop launchpad for Windows that can quickly manage, categorize, and launch 
 <img width="1919" height="1079" alt="see" src="https://github.com/user-attachments/assets/58a12250-acd5-4903-8df0-3306fb92ccd2" />
 
 喜欢的话请给个Star喵~
+哦对了，这个程序是大年初一发的，新年快乐！
 > [!NOTE]
 >
 > 本程序部分代码使用了DeepSeek R1与字节云雀大模型协助开发。
