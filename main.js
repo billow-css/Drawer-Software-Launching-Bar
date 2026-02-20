@@ -150,6 +150,8 @@ async function createWindow() {
     },
     transparent: true,
     frame: false,
+    movable: false,
+    resizable: false,
     backgroundColor: '#00000000',
   });
 
